@@ -1,8 +1,36 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
 
-class App extends Component {
+import './App.css';
+import logo from './logo.svg';
+import Back from './back.png';
+import GreyProfile from './grey_profile.png';
+
+const ITEMS_URL = 'http://192.168.0.101:4567/items.json';
+
+const Profile = () => (
+  <div>
+    <nav className="navbar navbar-light bg-light">
+      <span className="navbar-brand mb-0 h1">
+        <Link to="/">
+          <img src={Back} alt="back" style={{ height: 30 }} />
+        </Link>
+        Profile
+      </span>
+    </nav>
+
+    <div style={{ textAlign: 'center' }}>
+      <img
+        src={GreyProfile}
+        alt="profile"
+        style={{ height: 200, marginTop: 50 }}
+      />
+      <p style={{ color: '#888', fontSize: 20 }}>username</p>
+    </div>
+  </div>
+);
+
+class List extends Component {
   state = {
     items: [],
     loading: true,
@@ -11,7 +39,7 @@ class App extends Component {
   };
 
   componentDidMount() {
-    fetch('http://localhost:4567/items.json')
+    fetch(ITEMS_URL)
       .then((response) => response.json())
       .then((items) => {
         this.setState({ items, loading: false });
@@ -33,7 +61,7 @@ class App extends Component {
   addItem = (e) => {
     e.preventDefault();
 
-    fetch('http://localhost:4567/items.json', {
+    fetch(ITEMS_URL, {
       method: 'POST',
       body: JSON.stringify({ item: this.state.todoItem }),
       headers: {
@@ -53,7 +81,7 @@ class App extends Component {
   };
 
   deleteItem = (itemId) => {
-    fetch('http://localhost:4567/items.json', {
+    fetch(ITEMS_URL, {
       method: 'DELETE',
       body: JSON.stringify({ id: itemId }),
       headers: {
@@ -85,6 +113,9 @@ class App extends Component {
             My Todo List
           </span>
           {offline && <span className="badge badge-danger my-3">Offline</span>}
+          <span>
+            <Link to="/profile">Profile</Link>
+          </span>
         </nav>
 
         <div className="px-3 py-2">
@@ -139,4 +170,11 @@ class App extends Component {
   }
 }
 
-export default App;
+export default () => (
+  <Router>
+    <div>
+      <Route path="/" exact component={List} />
+      <Route path="/profile" exact component={Profile} />
+    </div>
+  </Router>
+);
