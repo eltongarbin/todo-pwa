@@ -8,27 +8,99 @@ import GreyProfile from './grey_profile.png';
 
 const ITEMS_URL = 'http://192.168.0.101:4567/items.json';
 
-const Profile = () => (
-  <div>
-    <nav className="navbar navbar-light bg-light">
-      <span className="navbar-brand mb-0 h1">
-        <Link to="/">
-          <img src={Back} alt="back" style={{ height: 30 }} />
-        </Link>
-        Profile
-      </span>
-    </nav>
+class Profile extends Component {
+  state = { image: null, supportsCamera: 'mediaDevices' in navigator };
 
-    <div style={{ textAlign: 'center' }}>
-      <img
-        src={GreyProfile}
-        alt="profile"
-        style={{ height: 200, marginTop: 50 }}
-      />
-      <p style={{ color: '#888', fontSize: 20 }}>username</p>
-    </div>
-  </div>
-);
+  startChangeImage = () => {
+    this.setState({ enableCamera: !this.state.enableCamera });
+  };
+
+  takeImage = () => {
+    this._canvas.width = this._video.videoWidth;
+    this._canvas.height = this._video.videoHeight;
+
+    this._canvas
+      .getContext('2d')
+      .drawImage(
+        this._video,
+        0,
+        0,
+        this._video.videoWidth,
+        this._video.videoHeight
+      );
+
+    this._video.srcObject.getVideoTracks().forEach((track) => {
+      track.stop();
+    });
+
+    this.setState({
+      image: this._canvas.toDataURL(),
+      enableCamera: false
+    });
+  };
+
+  render() {
+    return (
+      <div>
+        <nav className="navbar navbar-light bg-light">
+          <span className="navbar-brand mb-0 h1">
+            <Link to="/">
+              <img src={Back} alt="back" style={{ height: 30 }} />
+            </Link>
+            Profile
+          </span>
+        </nav>
+
+        <div style={{ textAlign: 'center' }}>
+          <img
+            src={this.state.image || GreyProfile}
+            alt="profile"
+            style={{ height: 200, marginTop: 50 }}
+          />
+          <p style={{ color: '#888', fontSize: 20 }}>username</p>
+          {this.state.enableCamera && (
+            <div>
+              <video
+                ref={(c) => {
+                  this._video = c;
+                  if (this._video) {
+                    navigator.mediaDevices
+                      .getUserMedia({ video: true })
+                      .then((stream) => {
+                        this._video.srcObject = stream;
+                      })
+                      .catch((error) =>
+                        console.error(
+                          'Não foi possível acessar a camera: ',
+                          error
+                        )
+                      );
+                  }
+                }}
+                controls={false}
+                autoPlay
+                style={{ width: '100%', maxWidth: 300 }}
+              />
+
+              <br />
+
+              <button onClick={this.takeImage}>Take Image</button>
+
+              <canvas
+                ref={(c) => (this._canvas = c)}
+                style={{ display: 'none' }}
+              />
+            </div>
+          )}
+          <br />
+          {this.state.supportsCamera && (
+            <button onClick={this.startChangeImage}>Toggle Camera</button>
+          )}
+        </div>
+      </div>
+    );
+  }
+}
 
 class List extends Component {
   state = {
