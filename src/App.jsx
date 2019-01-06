@@ -8,6 +8,21 @@ import GreyProfile from './grey_profile.png';
 
 const ITEMS_URL = 'http://192.168.0.101:4567/items.json';
 
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding)
+    .replace(/\-/g, '+')
+    .replace(/_/g, '/');
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
 class Profile extends Component {
   state = { image: null, supportsCamera: 'mediaDevices' in navigator };
 
@@ -37,6 +52,27 @@ class Profile extends Component {
       image: this._canvas.toDataURL(),
       enableCamera: false
     });
+  };
+
+  subscribe = () => {
+    const key =
+      'BF_i9exVf9Q9ize2SgBsSMKKLK9J0YRSLzLHLqfyH-xKyMUN_TYxY-lGNHjsOImRfKecJj22Adf6XzQIGBNPkNA';
+
+    global.registration.pushManager
+      .subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(key)
+      })
+      .then((sub) => {
+        console.log('Subscribed!');
+      })
+      .catch((err) => {
+        console.error('Did not subscribe.');
+      });
+  };
+
+  testPushMessage = () => {
+    global.registration.showNotification('Test Message', { body: 'Success!' });
   };
 
   render() {
@@ -96,6 +132,10 @@ class Profile extends Component {
           {this.state.supportsCamera && (
             <button onClick={this.startChangeImage}>Toggle Camera</button>
           )}
+          <br />
+          <button onClick={this.subscribe}>Subscribe for Notifications</button>
+          <br />
+          <button onClick={this.testPushMessage}>Test Push Message</button>
         </div>
       </div>
     );
